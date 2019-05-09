@@ -1,0 +1,135 @@
+<html>
+<style>
+  .board {
+    border: 1px solid red;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .boardGrid {
+    width: 50px;
+    height: 50px;
+    border: 1px solid #000;
+    float: left;
+
+    color: #ddd;
+  }
+
+  .boardPiece {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #000;
+    box-shadow: #ddd 0 0 10px 0;
+  }
+
+  .boardPiece.black {
+    background: #000;
+  }
+
+  .boardPiece.white {
+    background: #fff;
+  }
+</style>
+
+<body>
+  <div id='app' class='board'></div>
+</body>
+<script>
+  function Board(id) {
+    this.col = 16;
+    this.row = 16;
+    var container = document.getElementById(id);
+    if (!container) {
+      container = document.createElement('div');
+      document.body.appendChild(container);
+    }
+    container.style.width = `${this.col * 52}px`;
+    container.style.height = `${this.row * 52}px`;
+    container.addEventListener('click', function (e) {
+      var x = e.clientX, y = e.clientY;
+      x = Math.round(x / 52);
+      y = Math.round(y / 52);
+      this.player.setPiece({ x, y })
+    }.bind(this))
+    this.container = container;
+  }
+  Board.prototype.init = function () {
+    let count = 0
+    for (var i = 0; i < this.row; i++) {
+      for (var j = 0; j < this.col; j++) {
+        var div = document.createElement('div');
+        div.className = 'boardGrid';
+        div.innerHTML = count++;
+        this.container.appendChild(div);
+      }
+    }
+  }
+  Board.prototype.set = function (position, color) {
+    var x = position.x, y = position.y;
+    var piece = document.getElementById('boardPiece-' + x + y);
+    if (piece) {
+      this.container.removeChild(piece);
+      return;
+    }
+    piece = document.createElement('div');
+    piece.className = 'boardPiece ' + color;
+    piece.style.left = `${x * 52 - 15}px`;
+    piece.style.top = `${y * 52 - 15}px`;
+    piece.id = 'boardPiece-' + x + y;
+    this.container.appendChild(piece);
+
+    if (color === 'black') {
+      this.computer.setPiece(position);
+    }
+  }
+  Board.prototype.getPiece = function(position) {
+    var x = position.x, y = position.y;
+    var piece = document.getElementById('boardPiece-'+x+y)
+    return piece;
+  }
+  Board.prototype.nearRandom = function (position) {
+    var x = position.x,
+      y = position.y;
+    var randx = (Math.random() > 0.5 ? 1 : -1),
+        randy = Math.random() > 0.5 ? 1 : -1;
+    x += randx;
+    y += randy;
+    return { x, y }
+  }
+  Board.prototype.addPlayer = function (player) {
+    this.player = player;
+  }
+  Board.prototype.addComputer = function(computer) {
+    this.computer = computer;
+  }
+  var board = new Board('app');
+  board.init();
+
+  function Player(name) {
+    this.name = name;
+  }
+  Player.prototype.setPiece = function (position) {
+    board.set(position, 'black');
+  }
+  var p1 = new Player('junlong');
+  board.addPlayer(p1);
+
+  function Computer(name) {
+    this.name = name;
+  }
+  Computer.prototype.setPiece = function (playerPosition) {
+    var position = board.nearRandom(playerPosition);
+    var piece = board.getPiece(position)
+    if (piece) {
+      this.setPiece(playerPosition);
+      return;
+    }
+    board.set(position, 'white');
+  }
+  var computer = new Computer('blue ocean');
+  board.addComputer(computer);
+</script>
+
+</html>
